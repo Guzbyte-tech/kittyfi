@@ -2,10 +2,10 @@
 
 pragma solidity 0.8.26;
 
-import { KittyCoin } from "./KittyCoin.sol";
-import { KittyVault, IKittyVault } from "./KittyVault.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import {KittyCoin} from "./KittyCoin.sol";
+import {KittyVault, IKittyVault} from "./KittyVault.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @title KittyPool
@@ -43,17 +43,24 @@ contract KittyPool {
     }
 
     modifier tokenExists(address _token) {
-        require(tokenToVault[_token] != address(0), KittyPool__TokenNotFoundMeeoooww());
+        require(
+            tokenToVault[_token] != address(0),
+            KittyPool__TokenNotFoundMeeoooww()
+        );
         _;
     }
-    
+
     /**
-     * 
+     *
      * @param _meowntainer The maintainer of protocol, performs executions related to Aaves
      * @param _euroPriceFeed The chainlink oracle price feed address for EURO
      * @param aavePool The aave pool address on which collateral is supplied to yield interest
      */
-    constructor(address _meowntainer, address _euroPriceFeed, address aavePool) {
+    constructor(
+        address _meowntainer,
+        address _euroPriceFeed,
+        address aavePool
+    ) {
         meowntainer = _meowntainer;
         i_kittyCoin = new KittyCoin(address(this));
         i_euroPriceFeed = _euroPriceFeed;
@@ -66,32 +73,61 @@ contract KittyPool {
      * @param _token address of collateral token for which vault is created
      * @param _priceFeed price feed for the token (TOKEN / USD)
      */
-    function meownufactureKittyVault(address _token, address _priceFeed) external onlyMeowntainer {
-        require(tokenToVault[_token] == address(0), KittyPool__TokenAlreadyExistsMeeoooww());
+    function meownufactureKittyVault(
+        address _token,
+        address _priceFeed
+    ) external onlyMeowntainer {
+        require(
+            tokenToVault[_token] == address(0),
+            KittyPool__TokenAlreadyExistsMeeoooww()
+        );
 
-        address _kittyVault = address(new KittyVault{ salt: bytes32(abi.encodePacked(ERC20(_token).symbol())) }(_token, address(this), _priceFeed, i_euroPriceFeed, meowntainer, i_aavePool));
+        address _kittyVault = address(
+            new KittyVault{
+                salt: bytes32(abi.encodePacked(ERC20(_token).symbol()))
+            }(
+                _token,
+                address(this),
+                _priceFeed,
+                i_euroPriceFeed,
+                meowntainer,
+                i_aavePool
+            )
+        );
 
         tokenToVault[_token] = _kittyVault;
         vaults.push(_kittyVault);
-    } 
+    }
 
     /**
      * @notice Deposits the collateral in the vault
      * @param _token token address
      * @param _ameownt amount of token to deposit
      */
-    function depawsitMeowllateral(address _token, uint256 _ameownt) external tokenExists(_token) {
+    function depawsitMeowllateral(
+        address _token,
+        uint256 _ameownt
+    ) external tokenExists(_token) {
         IKittyVault(tokenToVault[_token]).executeDepawsit(msg.sender, _ameownt);
-    } 
+    }
 
     /**
      * @notice Withdraws the collateral from the vault
      * @param _token token address
      * @param _ameownt amount of catty nip (shares), corresponding to which collateral is withdrawn
      */
-    function whiskdrawMeowllateral(address _token, uint256 _ameownt) external tokenExists(_token) {
-        IKittyVault(tokenToVault[_token]).executeWhiskdrawal(msg.sender, _ameownt);
-        require(_hasEnoughMeowllateral(msg.sender), KittyPool__NotEnoughMeowllateralPurrrr());
+    function whiskdrawMeowllateral(
+        address _token,
+        uint256 _ameownt
+    ) external tokenExists(_token) {
+        IKittyVault(tokenToVault[_token]).executeWhiskdrawal(
+            msg.sender,
+            _ameownt
+        );
+        require(
+            _hasEnoughMeowllateral(msg.sender),
+            KittyPool__NotEnoughMeowllateralPurrrr()
+        );
     }
 
     /**
@@ -101,7 +137,10 @@ contract KittyPool {
     function meowintKittyCoin(uint256 _ameownt) external {
         kittyCoinMeownted[msg.sender] += _ameownt;
         i_kittyCoin.mint(msg.sender, _ameownt);
-        require(_hasEnoughMeowllateral(msg.sender), KittyPool__NotEnoughMeowllateralPurrrr());
+        require(
+            _hasEnoughMeowllateral(msg.sender),
+            KittyPool__NotEnoughMeowllateralPurrrr()
+        );
     }
 
     /**
@@ -118,7 +157,9 @@ contract KittyPool {
      * @notice Liquidates the bad debt position of the user
      * @param _user address of the user
      */
-    function purrgeBadPawsition(address _user) external returns (uint256 _totalAmountReceived) {
+    function purrgeBadPawsition(
+        address _user
+    ) external returns (uint256 _totalAmountReceived) {
         require(!(_hasEnoughMeowllateral(_user)), KittyPool__UserIsPurrfect());
         uint256 totalDebt = kittyCoinMeownted[_user];
 
@@ -131,20 +172,30 @@ contract KittyPool {
 
         if (totalDebt >= userMeowllateralInEuros) {
             redeemPercent = PRECISION;
-        }
-        else {
-            redeemPercent = totalDebt.mulDiv(PRECISION, userMeowllateralInEuros);
+        } else {
+            redeemPercent = totalDebt.mulDiv(
+                PRECISION,
+                userMeowllateralInEuros
+            );
         }
 
         uint256 vaults_length = vaults.length;
 
         for (uint256 i; i < vaults_length; ) {
             IKittyVault _vault = IKittyVault(vaults[i]);
-            uint256 vaultCollateral = _vault.getUserVaultMeowllateralInEuros(_user);
-            uint256 toDistribute = vaultCollateral.mulDiv(redeemPercent, PRECISION);
+            uint256 vaultCollateral = _vault.getUserVaultMeowllateralInEuros(
+                _user
+            );
+            uint256 toDistribute = vaultCollateral.mulDiv(
+                redeemPercent,
+                PRECISION
+            );
             uint256 extraCollateral = vaultCollateral - toDistribute;
 
-            uint256 extraReward = toDistribute.mulDiv(REWARD_PERCENT, PRECISION);
+            uint256 extraReward = toDistribute.mulDiv(
+                REWARD_PERCENT,
+                PRECISION
+            );
             extraReward = Math.min(extraReward, extraCollateral);
             _totalAmountReceived += (toDistribute + extraReward);
 
@@ -161,9 +212,14 @@ contract KittyPool {
      * @param _user address of the user
      * @return hasEnoughCollateral true if user has enough Meowllateral
      */
-    function _hasEnoughMeowllateral(address _user) internal view returns (bool hasEnoughCollateral) {
+    function _hasEnoughMeowllateral(
+        address _user
+    ) internal view returns (bool hasEnoughCollateral) {
         uint256 totalCollateralInEuros = getUserMeowllateralInEuros(_user);
-        uint256 collateralRequiredInEuros = kittyCoinMeownted[_user].mulDiv(COLLATERAL_PERCENT, COLLATERAL_PRECISION);
+        uint256 collateralRequiredInEuros = kittyCoinMeownted[_user].mulDiv(
+            COLLATERAL_PERCENT,
+            COLLATERAL_PRECISION
+        );
 
         return totalCollateralInEuros >= collateralRequiredInEuros;
     }
@@ -173,11 +229,14 @@ contract KittyPool {
      * @param _user address of the user
      * @return totalUserMeowllateral total Meowllateral of the user
      */
-    function getUserMeowllateralInEuros(address _user) public view returns (uint256 totalUserMeowllateral) {
+    function getUserMeowllateralInEuros(
+        address _user
+    ) public view returns (uint256 totalUserMeowllateral) {
         uint256 vault_length = vaults.length;
 
         for (uint256 i; i < vault_length; ) {
-            totalUserMeowllateral += IKittyVault(vaults[i]).getUserVaultMeowllateralInEuros(_user);
+            totalUserMeowllateral += IKittyVault(vaults[i])
+                .getUserVaultMeowllateralInEuros(_user);
 
             unchecked {
                 ++i;
@@ -201,7 +260,9 @@ contract KittyPool {
         return tokenToVault[_token];
     }
 
-    function getKittyCoinMeownted(address _user) external view returns (uint256) {
+    function getKittyCoinMeownted(
+        address _user
+    ) external view returns (uint256) {
         return kittyCoinMeownted[_user];
     }
 }

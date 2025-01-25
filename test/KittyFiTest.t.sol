@@ -2,14 +2,14 @@
 
 pragma solidity 0.8.26;
 
-import { Test, console } from "forge-std/Test.sol";
-import { KittyCoin } from "src/KittyCoin.sol";
-import { KittyPool } from "src/KittyPool.sol";
-import { KittyVault, IAavePool } from "src/KittyVault.sol";
-import { DeployKittyFi, HelperConfig } from "script/DeployKittyFi.s.sol";
-import { ERC20Mock } from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
-import { MockV3Aggregator } from "@chainlink/contracts/src/v0.8/tests/MockV3Aggregator.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Test, console} from "forge-std/Test.sol";
+import {KittyCoin} from "src/KittyCoin.sol";
+import {KittyPool} from "src/KittyPool.sol";
+import {KittyVault, IAavePool} from "src/KittyVault.sol";
+import {DeployKittyFi, HelperConfig} from "script/DeployKittyFi.s.sol";
+import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
+import {MockV3Aggregator} from "@chainlink/contracts/src/v0.8/tests/MockV3Aggregator.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract KittyFiTest is Test {
     KittyCoin kittyCoin;
@@ -27,7 +27,11 @@ contract KittyFiTest is Test {
         weth = config.weth;
         deal(weth, user, AMOUNT);
 
-        kittyPool = new KittyPool(meowntainer, config.euroPriceFeed, config.aavePool);
+        kittyPool = new KittyPool(
+            meowntainer,
+            config.euroPriceFeed,
+            config.aavePool
+        );
 
         vm.prank(meowntainer);
         kittyPool.meownufactureKittyVault(config.weth, config.ethUsdPriceFeed);
@@ -50,7 +54,11 @@ contract KittyFiTest is Test {
         ERC20Mock token = new ERC20Mock();
         MockV3Aggregator priceFeed = new MockV3Aggregator(8, 1e8);
 
-        vm.expectRevert(abi.encodeWithSelector(KittyPool.KittyPool__NotMeowntainerPurrrrr.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                KittyPool.KittyPool__NotMeowntainerPurrrrr.selector
+            )
+        );
         kittyPool.meownufactureKittyVault(address(token), address(priceFeed));
         vm.stopPrank();
     }
@@ -95,7 +103,7 @@ contract KittyFiTest is Test {
 
     function test_UserDepositsAndMintsKittyCoin() public {
         uint256 toDeposit = 5 ether;
-        uint256 amountToMint = 20e18;       // 20 KittyCoin
+        uint256 amountToMint = 20e18; // 20 KittyCoin
 
         vm.startPrank(user);
 
@@ -119,8 +127,7 @@ contract KittyFiTest is Test {
 
         vm.stopPrank();
 
-
-        // now user wants to withdraw 
+        // now user wants to withdraw
         uint256 toWithdraw = 3 ether;
 
         vm.startPrank(user);
@@ -132,14 +139,17 @@ contract KittyFiTest is Test {
         assertEq(wethVault.totalMeowllateralInVault(), toDeposit - toWithdraw);
         assertEq(wethVault.totalCattyNip(), toDeposit - toWithdraw);
         assertEq(wethVault.userToCattyNip(user), toDeposit - toWithdraw);
-        assertEq(IERC20(weth).balanceOf(address(wethVault)), toDeposit - toWithdraw);
+        assertEq(
+            IERC20(weth).balanceOf(address(wethVault)),
+            toDeposit - toWithdraw
+        );
 
         assertEq(IERC20(weth).balanceOf(user), AMOUNT - toDeposit + toWithdraw);
     }
 
     function test_BurningKittyCoin() public {
         uint256 toDeposit = 5 ether;
-        uint256 amountToMint = 20e18;       // 20 KittyCoin
+        uint256 amountToMint = 20e18; // 20 KittyCoin
 
         vm.startPrank(user);
 
@@ -177,14 +187,20 @@ contract KittyFiTest is Test {
         vm.prank(meowntainer);
         wethVault.purrrCollateralToAave(toSupply);
 
-        assertEq(wethVault.totalMeowllateralInVault(), totalDepositedInVault - toSupply);
+        assertEq(
+            wethVault.totalMeowllateralInVault(),
+            totalDepositedInVault - toSupply
+        );
 
         uint256 totalCollateralBase = wethVault.getTotalMeowllateralInAave();
 
         assert(totalCollateralBase > 0);
     }
 
-    function test_supplyAndWithdrawCollateralFromAave() public userDepositsCollateral {
+    function test_supplyAndWithdrawCollateralFromAave()
+        public
+        userDepositsCollateral
+    {
         uint256 totalDepositedInVault = 5 ether;
 
         // meowntainer transfers collateral in eth vault to Aave to earn interest
